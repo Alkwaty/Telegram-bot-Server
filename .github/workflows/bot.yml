@@ -8,29 +8,25 @@ on:
   workflow_dispatch:
 
 jobs:
-  run-bot:
+  build:
     runs-on: ubuntu-latest
 
     steps:
       - name: استنساخ المستودع
         uses: actions/checkout@v4
 
-      - name: إعداد بايثون
+      - name: إعداد Python
         uses: actions/setup-python@v4
         with:
-          python-version:  3.x 
+          python-version: "3.10"
 
       - name: تثبيت المتطلبات
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt
 
-      - name: التحقق من المتغيرات البيئية
-        run: |
-          if [ -z "${{ secrets.TOKEN }}" ]; then
-            echo "الرمز المميز (TOKEN) غير محدد!"
-            exit 1
-          fi
-
       - name: تشغيل البوت
-        run: python bot.py
+        env:
+          TOKEN: ${{ secrets.TOKEN }}
+        run: |
+          python bot.py
