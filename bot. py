@@ -1,11 +1,14 @@
 
+import os
 from telegram import Update
 from telegram.ext import Application, CommandHandler, MessageHandler, filters, ConversationHandler, CallbackContext
 
-
-import os
-
+# استدعاء التوكن من Secrets
 TOKEN = os.getenv("TOKEN")
+
+# التحقق إذا التوكن موجود
+if not TOKEN:
+    raise ValueError("التوكن غير موجود. تأكد من إضافته في Secrets.")
 
 # الحسابات المصرح لها (اسم المستخدم وكلمة المرور)
 accounts = {
@@ -17,21 +20,19 @@ accounts = {
 # مراحل المحادثة
 ASK_USERNAME, ASK_PASSWORD = range(2)
 
-# عند إرسال /start
+# أوامر البوت
 async def start(update: Update, context: CallbackContext) -> None:
     message = """
-مرحباً بك في بوت جميع الاختراقات ، لقد تم تطويري من قبل دولة الهكر .
+مرحباً بك في بوت جميع الاختراقات ، لقد تم تطويري من قبل دولة الهكر.
 العديد من الميزات، وللحصول على حساب في البوت، قم بالتواصل مع المطور.
-المطور : @LML15 
+المطور : @LML15
 """
     await update.message.reply_text(message)
 
-# عند إرسال /login
 async def login(update: Update, context: CallbackContext) -> int:
     await update.message.reply_text("🔐 يرجى إدخال اسم المستخدم:")
     return ASK_USERNAME
 
-# التحقق من اسم المستخدم
 async def check_username(update: Update, context: CallbackContext) -> int:
     username = update.message.text.strip()
     if username in accounts:
@@ -42,19 +43,17 @@ async def check_username(update: Update, context: CallbackContext) -> int:
         await update.message.reply_text("❌ لم يتم إيجاد هذا الحساب.")
         return ConversationHandler.END
 
-# التحقق من كلمة المرور
 async def check_password(update: Update, context: CallbackContext) -> int:
     password = update.message.text.strip()
     username = context.user_data.get("username")
 
     if accounts.get(username) == password:
-        await update.message.reply_text(f"🎉 تم تسجيل الدخول بنجاح، مرحبًا {username}!\nالآن يمكنك التمتع بخدمات البوت.")
+        await update.message.reply_text(f"🎉 تم تسجيل الدخول بنجاح، مرحبًا {username}!")
     else:
-        await update.message.reply_text("❌ كلمة المرور غير صحيحة. الرجاء إعادة المحاولة.")
+        await update.message.reply_text("❌ كلمة المرور غير صحيحة.")
     
     return ConversationHandler.END
 
-# في حال أراد المستخدم إلغاء العملية
 async def cancel(update: Update, context: CallbackContext) -> int:
     await update.message.reply_text("🚫 تم إلغاء العملية.")
     return ConversationHandler.END
@@ -63,7 +62,6 @@ async def cancel(update: Update, context: CallbackContext) -> int:
 def main() -> None:
     application = Application.builder().token(TOKEN).build()
 
-    # التعامل مع تسجيل الدخول
     conv_handler = ConversationHandler(
         entry_points=[CommandHandler("login", login)],
         states={
@@ -73,11 +71,9 @@ def main() -> None:
         fallbacks=[CommandHandler("cancel", cancel)],
     )
 
-    # إضافة الأوامر
     application.add_handler(CommandHandler("start", start))
     application.add_handler(conv_handler)
 
-    # بدء البوت
     application.run_polling()
 
 if __name__ == "__main__":
